@@ -790,9 +790,184 @@
        </div>
      );
     }
+    
+    // ==========================================
+    // 5. PRODUCT BATTLE CARDS COMPONENT (NEW)
+    // ==========================================
+
+    function ProductCardsApp() {
+      const [activeTab, setActiveTab] = useState(0);
+      const tabs = ['FHA Loan', 'USDA Loan', 'Conventional', 'Global Systems'];
+
+      const SectionCard = ({ title, icon, children }) => (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-full">
+          <div className="bg-slate-50 border-b border-slate-200 p-4 flex items-center gap-3">
+            <div className="text-indigo-500">{icon}</div>
+            <h3 className="font-bold text-slate-800">{title}</h3>
+          </div>
+          <div className="p-5 space-y-3">
+            {children}
+          </div>
+        </div>
+      );
+
+      const ListItem = ({ label, value }) => (
+        <div className="flex items-start gap-2 text-[15px]">
+          <span className="text-emerald-500 mt-1 flex-shrink-0"><Icons.CheckCircle /></span>
+          <div>
+            {label && <span className="font-bold text-slate-800 mr-1">{label}:</span>}
+            <span className="text-slate-600">{value}</span>
+          </div>
+        </div>
+      );
+
+      return (
+        <div className="flex flex-col items-center w-full max-w-5xl animate-in fade-in duration-500">
+          
+          <div className="w-full bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex mb-6 overflow-x-auto">
+            {tabs.map((tab, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveTab(idx)}
+                className={`flex-1 min-w-[150px] py-3 px-4 rounded-xl font-bold text-sm sm:text-base transition-all whitespace-nowrap ${
+                  activeTab === idx ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="w-full mb-8">
+            {/* FHA Tab */}
+            {activeTab === 0 && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+                 <GoalBadge text="Core Strategy: Leverage for borrowers with lower credit scores, limited down payment funds, or high DTI ratios." />
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <SectionCard title="1. Minimum Requirements & Eligibility" icon={<Icons.Book />}>
+                      <ListItem label="Credit Score" value="Minimum 620 FICO." />
+                      <ListItem label="Down Payment" value="3.5% minimum." />
+                      <ListItem label="Property Type" value="Primary residence only (1-4 units)." />
+                      <ListItem label="DTI Ratios" value="Standard cap is 47% front-end and 50% back-end." />
+                      <ListItem label="Loan Limits" value="Based on county and unit count." />
+                    </SectionCard>
+                    <SectionCard title="2. Dependencies & Financial Nuances" icon={<Icons.Book />}>
+                      <ListItem label="Mortgage Insurance (MI)" value="Requires 1.75% Upfront MI (typically rolled into the loan) and Annual MI paid monthly." />
+                      <ListItem label="MI Duration" value="Life of the loan if LTV > 95%; 11 years if LTV ≤ 90% at closing." />
+                      <ListItem label="Identity of Interest" value="Sale between family or business associates may require a 15% down payment." />
+                      <ListItem label="Down Payment Assistance (DPA)" value="Neighbors Bank offers Repayable (2nd lien, 10-yr term) and Forgivable (0% interest, forgiven after 60 months) options." />
+                    </SectionCard>
+                    <SectionCard title="3. Special Instructions & 'Credit Ouchies'" icon={<Icons.Book />}>
+                      <ListItem label="Student Loans" value="If $0 payment reported, calculate monthly obligation as 0.5% of the balance." />
+                      <ListItem label="Collections" value="If non-medical collections exceed $2,000, add 5% of the balance as a liability." />
+                      <ListItem label="Bankruptcies" value="2 years seasoning for Chapter 7; 1 year on-time payments for Chapter 13." />
+                      <ListItem label="Manual Underwriting (MUW)" value="Required if AUS is 'Refer.' Front-end DTI restricted to 31% (up to 40% with comp factors)." />
+                    </SectionCard>
+                 </div>
+              </div>
+            )}
+
+            {/* USDA Tab */}
+            {activeTab === 1 && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+                 <GoalBadge text="Core Strategy: Target low-to-moderate income households seeking 100% financing for properties located in qualifying rural areas." />
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <SectionCard title="1. Minimum Requirements & Eligibility" icon={<Icons.Book />}>
+                      <ListItem label="Credit Score" value="Minimum 620 FICO required for all borrowers." />
+                      <ListItem label="Down Payment" value="0% (100% financing available)." />
+                      <ListItem label="Occupancy" value="All borrowers must occupy the home as their primary residence." />
+                      <ListItem label="Property Type" value="Single-unit primary residences only." />
+                      <ListItem label="Prohibited Profiles" value="Non-occupying co-borrowers are strictly prohibited." />
+                      <ListItem label="Loan Term" value="Restricted to a 30-year fixed term only." />
+                    </SectionCard>
+                    <SectionCard title="2. Income Structure: The Dual Calculation" icon={<Icons.Book />}>
+                      <div className="text-sm font-bold text-slate-700 mb-2">Repayment Income (DTI Calculation):</div>
+                      <ListItem label="Definition" value="Includes only the income for borrowers listed on the loan." />
+                      <ListItem label="Purpose" value="Determines the borrower's ability to repay and the Debt-to-Income (DTI) ratio." />
+                      <ListItem label="System Action" value="This income is entered into Encompass and documented in MyQueue notes." />
+                      <ListItem label="DTI Cap" value="Standard origination cap is 29% front-end and 41% back-end (29/41)." />
+                      
+                      <div className="text-sm font-bold text-slate-700 mt-4 mb-2">Household/Annual Income (Eligibility Calculation):</div>
+                      <ListItem label="Definition" value="Includes the income of ALL adults who will occupy the home, regardless of whether they are on the loan application." />
+                      <ListItem label="Purpose" value="Determines if the total household income is below the area cap to ensure the household is 'moderate-income'." />
+                      <ListItem label="System Action" value="This non-borrower income must be gathered and entered into MyQueue notes ONLY; it is not included in the Encompass application." />
+                      <ListItem label="Standard Caps" value="$119,850 for 1-4 person households; $158,250 for 5-8 person households." />
+                    </SectionCard>
+                    <SectionCard title="3. Financial & Property Nuances" icon={<Icons.Book />}>
+                      <ListItem label="Guarantee Fee" value="Requires a 1% Upfront fee (can be rolled into the loan) and a 0.35% Annual fee paid monthly for the life of the loan." />
+                      <ListItem label="Manufactured Homes" value="The unit must be no older than 20 years from the manufacture date to the closing date." />
+                      <ListItem label="Conventional Credit Test" value="Borrowers with significant liquid assets who could qualify for a Conventional loan may be ineligible for USDA." />
+                      <ListItem label="Community Property States" value="You must consider the debts and liabilities of a non-purchasing spouse in AZ, CA, ID, LA, NV, NM, TX, WA, and WI." />
+                      <ListItem label="Asset Documentation" value="Retirement funds can be used for reserves at 100% of their vested balance." />
+                    </SectionCard>
+                    <SectionCard title="4. Special System Instructions & 'Credit Ouchies'" icon={<Icons.Book />}>
+                      <ListItem label="Student Loans" value="Always count a payment; if the credit report shows $0, you must calculate and add 0.5% of the balance as a monthly debt." />
+                      <ListItem label="Collections" value="If total non-medical collections exceed $2,000, you must add 5% of the balance as a monthly liability." />
+                      <ListItem label="Employment History" value="Unique to USDA, non-self-employed borrowers only require 12 months of employment history (though originators should still aim for 24 months)." />
+                      <ListItem label="Wait Times" value="Set the expectation that USDA loans take longer to close because 100% of files must undergo an additional RD Review by the government after Neighbors Bank issues its final approval." />
+                      <ListItem label="Manual Underwriting (MUW)" value="Frequently required for USDA if GUS (Automated Underwriting) does not issue an 'Accept'. DTI is then strictly capped at 29/41 unless the borrower has a 680+ credit score and a ratio waiver." />
+                    </SectionCard>
+                 </div>
+              </div>
+            )}
+
+            {/* Conventional Tab */}
+            {activeTab === 2 && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+                 <GoalBadge text="Core Strategy: Best for borrowers with 680+ FICO scores and substantial assets to avoid government insurance costs." />
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <SectionCard title="1. Minimum Requirements & Eligibility" icon={<Icons.Book />}>
+                      <ListItem label="Credit Score" value="620 FICO minimum (680+ recommended)." />
+                      <ListItem label="Down Payment" value="3% for First-Time Homebuyers; 5% standard." />
+                      <ListItem label="DTI Ratios" value="Maximum 50% back-end with AUS approval." />
+                      <ListItem label="Loan Limits" value="Standard conforming limit is $832,750." />
+                      <ListItem label="Occupancy" value="Allows Primary, Second Homes, and Investment properties." />
+                    </SectionCard>
+                    <SectionCard title="2. Dependencies & PMI Nuances" icon={<Icons.Book />}>
+                      <ListItem label="Private Mortgage Insurance (PMI)" value="No upfront cost; monthly only." />
+                      <ListItem label="Cancellable" value="PMI automatically terminates at 78% LTV or can be requested at 80% LTV based on original value." />
+                      <ListItem label="Occupancy Minimums" value="10-20% down for second homes; 15-25% for investment properties." />
+                      <ListItem label="HomeReady/Home Possible" value="reduced 3% down for households under 80% Area Median Income." />
+                    </SectionCard>
+                    <SectionCard title="3. Special Instructions & Rules" icon={<Icons.Book />}>
+                      <ListItem label="No Manual Underwriting" value="If the AUS (DU or LP) gives a 'Refer,' the loan cannot proceed as Conventional." />
+                      <ListItem label="Student Loans" value="Fannie Mae (DU): Use 1% of balance if $0 reported; allows $0 if on IBR. Freddie Mac (LP): Use 0.5% of balance if $0 reported." />
+                      <ListItem label="Asset Use" value="Allows 100% of vested retirement funds for reserves (vs 60% for FHA)." />
+                      <ListItem label="Omit Debts" value="Can omit debts paid by others if 12 months of on-time history by a third party is documented." />
+                    </SectionCard>
+                 </div>
+              </div>
+            )}
+
+            {/* Global Systems Tab */}
+            {activeTab === 3 && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+                 <GoalBadge text="Core Strategy: Procedural standards for maintaining lead integrity, system accuracy, and seamless handoffs." />
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <SectionCard title="Lead Integrity (MyQueue)" icon={<Icons.Book />}>
+                      <ListItem label="5-Ring Rule" value="Must let phone ring minimum 5 times before hanging up." />
+                      <ListItem label="Contacted Status" value="Mark as 'CONTACTED' immediately if you speak with the borrower or an adult who knows them." />
+                      <ListItem label="Cadence" value="Follow up on PQ Opportunities every 1-48 hours." />
+                    </SectionCard>
+                    <SectionCard title="Encompass Mastery (E360)" icon={<Icons.Book />}>
+                      <ListItem label="The 1003 Flow" value="Use 'Liability Analysis' form for all REOs/debts—never enter directly on the App Summary." />
+                      <ListItem label="Fee Rounding" value="Round annual taxes/insurance by 12, then up to the nearest $25 interval (minimum $100)." />
+                      <ListItem label="Product Switching" value="Use 'Apply Loan Template Set' -> Neighbors Bank folder -> Choose product." />
+                    </SectionCard>
+                    <SectionCard title="The 'Sales Call' Handoff" icon={<Icons.Book />}>
+                      <ListItem label="Commitment" value="Secure a time (e.g., 8 PM tonight) for the borrower to upload Photo ID, Paystubs, and W2s." />
+                      <ListItem label="ARN Hot Transfer" value="Use the speed dial in ACD to introduce the borrower to an Alliance Realty Coordinator." />
+                    </SectionCard>
+                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
 
     // ==========================================
-    // 5. MAIN PORTAL (ROUTER / LAYOUT)
+    // 6. MAIN PORTAL (ROUTER / LAYOUT)
     // ==========================================
 
     function App() {
@@ -802,6 +977,7 @@
        { id: 'flashcards', label: 'Flashcards', icon: <Icons.Rotate />, color: 'text-blue-600', bg: 'bg-blue-100' },
        { id: 'quiz', label: 'Process Quiz', icon: <Icons.Trophy />, color: 'text-indigo-600', bg: 'bg-indigo-100' },
        { id: 'battlecard', label: 'Action Script', icon: <Icons.Target />, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+       { id: 'productcards', label: 'Product Battle Cards', icon: <Icons.Book />, color: 'text-amber-600', bg: 'bg-amber-100' },
      ];
 
      const renderView = () => {
@@ -809,8 +985,9 @@
          case 'flashcards': return <FlashcardsApp />;
          case 'quiz': return <QuizApp />;
          case 'battlecard': return <BattleCardApp />;
+         case 'productcards': return <ProductCardsApp />;
          default: return (
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl animate-in fade-in duration-500">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl animate-in fade-in duration-500">
              <button onClick={() => setCurrentView('flashcards')} className="flex flex-col items-center p-8 bg-white rounded-3xl shadow-md border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all group text-center">
                <div className="w-20 h-20 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
@@ -834,6 +1011,14 @@
                <h2 className="text-2xl font-bold text-slate-800 mb-2">Live Action Script</h2>
                <p className="text-slate-500">Quick-reference dashboard integrating call scripts and essential system actions.</p>
              </button>
+
+             <button onClick={() => setCurrentView('productcards')} className="flex flex-col items-center p-8 bg-white rounded-3xl shadow-md border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all group text-center">
+               <div className="w-20 h-20 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                 <Icons.Book />
+               </div>
+               <h2 className="text-2xl font-bold text-slate-800 mb-2">Product Battle Cards</h2>
+               <p className="text-slate-500">Quick-reference guides highlighting rules for FHA, USDA, Conventional, and Global Systems.</p>
+             </button>
            </div>
          );
        }
@@ -843,7 +1028,7 @@
        <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col">
          {/* Top Navigation Bar */}
          <nav className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
              <div className="flex justify-between h-16">
                <div className="flex">
                  <button
@@ -865,7 +1050,7 @@
                          : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
                      }`}
                    >
-                     <span className="w-4 h-4">{item.icon}</span> {item.label}
+                     <span className="w-4 h-4">{item.icon}</span> <span className="hidden md:inline">{item.label}</span>
                    </button>
                  ))}
                </div>
@@ -874,7 +1059,7 @@
          </nav>
 
          {/* Main Content Area */}
-         <main className="flex-1 w-full max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+         <main className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
            {/* Dynamic Header based on View */}
            {currentView !== 'home' && (
              <div className="w-full text-center mb-8 animate-in slide-in-from-top-2">
@@ -882,11 +1067,13 @@
                  {currentView === 'flashcards' && 'Mortgage Flashcards'}
                  {currentView === 'quiz' && 'NB Origination Process Quiz'}
                  {currentView === 'battlecard' && 'Origination Action Script'}
+                 {currentView === 'productcards' && 'Product Battle Cards'}
                </h1>
                <p className="text-slate-500 mt-2 font-medium">
                  {currentView === 'flashcards' && 'Master FHA, USDA, and Conventional guidelines.'}
                  {currentView === 'quiz' && 'Test your knowledge of the platform and processes.'}
                  {currentView === 'battlecard' && 'Process Flow & Script Integration Dashboard.'}
+                 {currentView === 'productcards' && 'Quick-reference guidelines for loan products and systems.'}
                </p>
              </div>
            )}
