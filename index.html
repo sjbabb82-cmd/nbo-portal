@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NB Training Hub</title>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    .animate-in { animation-duration: 0.5s; animation-fill-mode: both; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+    .fade-in { animation-name: fadeIn; }
+    .slide-in-from-bottom-4 { animation-name: slideInBottom; }
+    .slide-in-from-top-2 { animation-name: slideInTop; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideInBottom {
+      from { transform: translateY(1rem); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes slideInTop {
+      from { transform: translateY(-0.5rem); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .backface-hidden {
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+  </style>
+</head>
+<body class="bg-slate-50">
+  
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+
+    // ==========================================
+    // 1. SHARED DATA & ICONS
+    // ==========================================
+
+    const flashcardsData = [
+     // FHA
+     { id: 'fha-1', category: 'FHA Specialist', front: 'Minimum Credit Score', back: '620 FICO.' },
+     { id: 'fha-2', category: 'FHA Specialist', front: 'Minimum Down Payment', back: '3.5% of the purchase price.' },
+     { id: 'fha-3', category: 'FHA Specialist', front: 'Upfront MI Cost', back: '1.75% of the base loan amount.' },
+     { id: 'fha-4', category: 'FHA Specialist', front: 'Annual MI Duration (LTV > 95%)', back: 'For the full mortgage term (life of loan).' },
+     { id: 'fha-5', category: 'FHA Specialist', front: 'Annual MI Duration (LTV ≤ 90%)', back: '11 years.' },
+     { id: 'fha-6', category: 'FHA Specialist', front: 'Manual Underwrite Option?', back: 'Yes, available for REFER or CAUTION findings.' },
+     { id: 'fha-7', category: 'FHA Specialist', front: 'Standard Front-End DTI Cap', back: '47% during initial origination.' },
+     { id: 'fha-8', category: 'FHA Specialist', front: 'Standard Back-End DTI Cap', back: '50% during initial origination.' },
+     { id: 'fha-9', category: 'FHA Specialist', front: 'Property Eligibility', back: 'Primary 1-4 unit residences only.' },
+     { id: 'fha-10', category: 'FHA Specialist', front: 'HUD Condo Requirement', back: 'Condos must be HUD-approved by closing.' },
+     { id: 'fha-11', category: 'FHA Specialist', front: 'Student Loan ($0 payment)', back: 'Calculate as 0.5% of the outstanding balance.' },
+     { id: 'fha-12', category: 'FHA Specialist', front: 'Medical Collections Rule', back: 'Excluded from the $2,000 collection cap.' },
+     { id: 'fha-13', category: 'FHA Specialist', front: 'General Collections Cap', back: 'If total exceeds $2,000, add 5% of balance as liability.' },
+     { id: 'fha-14', category: 'FHA Specialist', front: 'Bankruptcy (Ch 7) Seasoning', back: '24 months from discharge date.' },
+     { id: 'fha-15', category: 'FHA Specialist', front: 'Bankruptcy (Ch 13) MUW Rule', back: '12 months of on-time payments made.' },
+     { id: 'fha-16', category: 'FHA Specialist', front: 'Foreclosure Seasoning', back: '36 months from completion date.' },
+     { id: 'fha-17', category: 'FHA Specialist', front: 'Manufactured Home Date', back: 'Must be built after June 15th, 1976.' },
+     { id: 'fha-18', category: 'FHA Specialist', front: 'Short Sale Seasoning', back: '36 months from completion date.' },
+     { id: 'fha-19', category: 'FHA Specialist', front: 'Tax Repayment Plan Rule', back: '1 payment made and 0x30x12 required.' },
+     { id: 'fha-20', category: 'FHA Specialist', front: 'Identity of Interest', back: 'Sale between relatives/employers; may require 15% down.' },
+     { id: 'fha-21', category: 'FHA Specialist', front: 'Property Flipping Rule', back: 'Cannot purchase home sold within previous 90 days.' },
+     { id: 'fha-22', category: 'FHA Specialist', front: 'AUS System Name', back: 'Desktop Underwriter (DU).' },
+     { id: 'fha-23', category: 'FHA Specialist', front: 'Gift Funds Usage', back: 'Allowed for down payment and closing costs, but not reserves.' },
+     { id: 'fha-24', category: 'FHA Specialist', front: 'Retirement Assets Liquidated', back: 'Document liquidation if using for down payment.' },
+     { id: 'fha-25', category: 'FHA Specialist', front: 'Retirement Assets (Reserves)', back: 'Use 60% of the vested balance toward reserves.' },
+     { id: 'fha-26', category: 'FHA Specialist', front: 'Non-Occupying Co-Borrower?', back: 'Allowed on FHA loans (unlike USDA).' },
+     { id: 'fha-27', category: 'FHA Specialist', front: 'Community Property (NPS)', back: 'Debts of non-purchasing spouse MUST be considered.' },
+     { id: 'fha-28', category: 'FHA Specialist', front: 'Appraisal Standards', back: 'Must be safe, sound, and sanitary (e.g., handrails, no peeling paint).' },
+     { id: 'fha-29', category: 'FHA Specialist', front: 'Forgivable DPA Term', back: 'Second lien is forgiven after 60 months.' },
+     { id: 'fha-30', category: 'FHA Specialist', front: 'Repayable DPA Term', back: '10-year term with monthly P&I payments.' },
+     { id: 'fha-31', category: 'FHA Specialist', front: 'Co-signed Debt Omission', back: 'Omit if 12 months of on-time payments by primary are documented.' },
+     { id: 'fha-32', category: 'FHA Specialist', front: 'Disputed Derogatory Account Cap', back: 'If total > $1,000, add 5% of balance as liability.' },
+     { id: 'fha-33', category: 'FHA Specialist', front: 'Front-End Manual UW DTI', back: '31% max without compensating factors.' },
+     { id: 'fha-34', category: 'FHA Specialist', front: 'Back-End Manual UW DTI', back: '43% max without compensating factors.' },
+     { id: 'fha-35', category: 'FHA Specialist', front: 'Cash-Out Refinance Limit', back: 'Maximum LTV 80%.' },
+     { id: 'fha-36', category: 'FHA Specialist', front: 'Streamline Refinance', back: 'Reduced fees/paperwork; existing loan must be FHA.' },
+     { id: 'fha-37', category: 'FHA Specialist', front: 'Loan Terms Available', back: '15, 20, 25, and 30-year fixed.' },
+     { id: 'fha-38', category: 'FHA Specialist', front: 'Charge-Offs', back: 'Generally omitted unless disputed.' },
+     { id: 'fha-39', category: 'FHA Specialist', front: 'Mortgage Lates (12 months)', back: 'No more than 1x30x12 for standard qualification.' },
+     { id: 'fha-40', category: 'FHA Specialist', front: 'DPA Education Requirement', back: "Must take an approved homebuyer's education course." },
+
+     // USDA
+     { id: 'usda-1', category: 'USDA Rural Expert', front: 'Minimum Down Payment', back: '0% (100% financing).' },
+     { id: 'usda-2', category: 'USDA Rural Expert', front: 'Upfront Guarantee Fee', back: '1% of the loan amount.' },
+     { id: 'usda-3', category: 'USDA Rural Expert', front: 'Annual Fee Rate', back: '0.35% paid monthly for the life of the loan.' },
+     { id: 'usda-4', category: 'USDA Rural Expert', front: 'AUS System Name', back: 'GUS (Guaranteed Underwriting System).' },
+     { id: 'usda-5', category: 'USDA Rural Expert', front: 'Income Eligibility Calculation', back: 'Based on Household Income (all adult residents).' },
+     { id: 'usda-6', category: 'USDA Rural Expert', front: 'Standard Area Income Cap', back: '$119,850 for a 1-4 person household.' },
+     { id: 'usda-7', category: 'USDA Rural Expert', front: 'Qualifying DTI Calculation', back: 'Based on Repayment Income (loan applicants only).' },
+     { id: 'usda-8', category: 'USDA Rural Expert', front: 'Manual UW DTI Cap', back: '29/41 standard; 32/44 with 680 FICO and ratio waiver.' },
+     { id: 'usda-9', category: 'USDA Rural Expert', front: 'Employment History Rule', back: 'Only 12 months required (non-self-employed).' },
+     { id: 'usda-10', category: 'USDA Rural Expert', front: 'Student Loan Rule', back: 'Always count payment; if $0, use 0.5% of balance.' },
+     { id: 'usda-11', category: 'USDA Rural Expert', front: 'Property Requirement', back: 'Eligible rural area; single-unit primary residence only.' },
+     { id: 'usda-12', category: 'USDA Rural Expert', front: 'Non-Occupying Co-Borrowers?', back: 'Prohibited.' },
+     { id: 'usda-13', category: 'USDA Rural Expert', front: 'Bankruptcy (Ch 7) Seasoning', back: '36 months.' },
+     { id: 'usda-14', category: 'USDA Rural Expert', front: 'Bankruptcy (Ch 13) MUW', back: '12 months after discharge.' },
+     { id: 'usda-15', category: 'USDA Rural Expert', front: 'Foreclosure/Short Sale Seasoning', back: '36 months.' },
+     { id: 'usda-16', category: 'USDA Rural Expert', front: 'Maximum Loan Amount', back: 'None, but limited by DTI and household income.' },
+     { id: 'usda-17', category: 'USDA Rural Expert', front: 'Medical Collections Rule', back: 'Excluded from the $2,000 cap.' },
+     { id: 'usda-18', category: 'USDA Rural Expert', front: 'Collections Action Cap', back: 'If total non-medical > $2,000, add 5% of balance to DTI.' },
+     { id: 'usda-19', category: 'USDA Rural Expert', front: 'Disputed Account Action', back: 'If total > $2,000, add 5% of balance as liability.' },
+     { id: 'usda-20', category: 'USDA Rural Expert', front: 'NPS Community Property', back: "Must consider spouse's debts/liabilities." },
+     { id: 'usda-21', category: 'USDA Rural Expert', front: 'Conventional Credit Test', back: 'If B has conventional assets/credit, they may be ineligible.' },
+     { id: 'usda-22', category: 'USDA Rural Expert', front: 'Wait Time After Closing', back: 'Closing typically takes longer due to RD review step.' },
+     { id: 'usda-23', category: 'USDA Rural Expert', front: 'Loan Terms Available', back: '30-year fixed only.' },
+     { id: 'usda-24', category: 'USDA Rural Expert', front: 'Manufactured Home Age', back: 'Cannot be older than 20 years.' },
+     { id: 'usda-25', category: 'USDA Rural Expert', front: 'Household Income Verification', back: 'Includes OT/Bonus expected in next 12 months.' },
+     { id: 'usda-26', category: 'USDA Rural Expert', front: 'Tax Debt Rule', back: 'Must be on plan with 3+ on-time payments made.' },
+     { id: 'usda-27', category: 'USDA Rural Expert', front: 'Child Support Arrears', back: 'Subject to administrative offset? Borrower ineligible.' },
+     { id: 'usda-28', category: 'USDA Rural Expert', front: 'Omit Installment Debt', back: 'If < 10 months left and total < 5% of income.' },
+     { id: 'usda-29', category: 'USDA Rural Expert', front: 'Lease Payments Rule', back: 'Always included, regardless of months remaining.' },
+     { id: 'usda-30', category: 'USDA Rural Expert', front: 'Retaining a Property', back: 'Allowed only in specific hardship/job transfer cases.' },
+     { id: 'usda-31', category: 'USDA Rural Expert', front: 'Co-signer Debt Omission', back: 'Document 12 months on-time payments by primary.' },
+     { id: 'usda-32', category: 'USDA Rural Expert', front: 'USDA Direct vs. Guaranteed', back: 'NB only offers Guaranteed (lender-funded).' },
+     { id: 'usda-33', category: 'USDA Rural Expert', front: 'Household Tax Filers', back: 'Must have filed for past 2 years.' },
+     { id: 'usda-34', category: 'USDA Rural Expert', front: 'Liquid Asset Inclusion', back: '100% of liquid assets considered for USDA eligibility.' },
+     { id: 'usda-35', category: 'USDA Rural Expert', front: 'OT/Bonus receipt history', back: 'Repayment requires 24 months; annual/eligibility uses best-case.' },
+     { id: 'usda-36', category: 'USDA Rural Expert', front: 'Rental Income Calculation', back: 'Deduct PITIA from Gross Rent; positive goes to income.' },
+     { id: 'usda-37', category: 'USDA Rural Expert', front: 'Refinance Type Allowed', back: 'Rate/Term only; no cash-out.' },
+     { id: 'usda-38', category: 'USDA Rural Expert', front: 'Existing Loan for Refi', back: 'Current loan must be USDA to refinance as USDA.' },
+     { id: 'usda-39', category: 'USDA Rural Expert', front: 'Charge-Off Omission', back: 'Can omit even if disputed.' },
+     { id: 'usda-40', category: 'USDA Rural Expert', front: 'Manual UW Comp Factors', back: 'E.g., 3 months PITIA reserves or 2yrs continuous employment.' },
+
+     // Conventional
+     { id: 'conv-1', category: 'Conventional Mastery', front: 'Minimum Down Payment (FTHB)', back: '3% for first-time homebuyers.' },
+     { id: 'conv-2', category: 'Conventional Mastery', front: 'Standard Down Payment', back: '5% for primary residences.' },
+     { id: 'conv-3', category: 'Conventional Mastery', front: 'PMI Termination (Automatic)', back: 'Once loan is scheduled to reach 78% LTV.' },
+     { id: 'conv-4', category: 'Conventional Mastery', front: 'PMI Termination (Request)', back: 'Can request at 80% LTV.' },
+     { id: 'conv-5', category: 'Conventional Mastery', front: 'AUS System Names', back: 'DU (Fannie Mae) and LP (Freddie Mac).' },
+     { id: 'conv-6', category: 'Conventional Mastery', front: 'Manual Underwriting?', back: 'No; must receive AUS approval.' },
+     { id: 'conv-7', category: 'Conventional Mastery', front: 'Standard Back-End DTI Cap', back: '50% max with AUS approval.' },
+     { id: 'conv-8', category: 'Conventional Mastery', front: 'Secondary Home Down Pmt', back: 'Ranges from 10% to 20%.' },
+     { id: 'conv-9', category: 'Conventional Mastery', front: 'Investment Property Down Pmt', back: 'Ranges from 15% to 25%.' },
+     { id: 'conv-10', category: 'Conventional Mastery', front: 'Conforming Loan Limit', back: '$832,750.' },
+     { id: 'conv-11', category: 'Conventional Mastery', front: 'Student Loan LP Rule', back: 'Use 0.5% of balance if no payment reported.' },
+     { id: 'conv-12', category: 'Conventional Mastery', front: 'Student Loan DU Rule', back: 'Use 1% of balance if no payment reported.' },
+     { id: 'conv-13', category: 'Conventional Mastery', front: 'Bankruptcy (Ch 7) DU Rule', back: '4 years (48 months) seasoning.' },
+     { id: 'conv-14', category: 'Conventional Mastery', front: 'Bankruptcy (Ch 13) Discharge', back: '2 years (24 months).' },
+     { id: 'conv-15', category: 'Conventional Mastery', front: 'Foreclosure Seasoning', back: '7 years (84 months).' },
+     { id: 'conv-16', category: 'Conventional Mastery', front: 'Community Property (NPS)', back: 'Exempt from considering NPS debts.' },
+     { id: 'conv-17', category: 'Conventional Mastery', front: 'HomeReady Income Cap', back: 'Qualifying income ≤ 80% Area Median Income.' },
+     { id: 'conv-18', category: 'Conventional Mastery', front: 'Secondary Property units', back: 'Maximum 1 unit property only.' },
+     { id: 'conv-19', category: 'Conventional Mastery', front: 'Omit Debt (Paid by Others)', back: 'Omit if documented 12 months paid by third party.' },
+     { id: 'conv-20', category: 'Conventional Mastery', front: 'Retirement Assets (Reserves)', back: 'Use 100% of the vested balance.' },
+     { id: 'conv-21', category: 'Conventional Mastery', front: 'Upfront Mortgage Insurance?', back: 'No upfront MI cost.' },
+     { id: 'conv-22', category: 'Conventional Mastery', front: 'LTV to Avoid PMI', back: 'Must put 20% down.' },
+     { id: 'conv-23', category: 'Conventional Mastery', front: 'Manufactured Home Max LTV', back: '95% regardless of program.' },
+     { id: 'conv-24', category: 'Conventional Mastery', front: 'Installment Debt Omission', back: '< 10 months remaining and total < 5% income.' },
+     { id: 'conv-25', category: 'Conventional Mastery', front: 'Collection Rule (1-unit Prim)', back: 'No dollar cap for single-unit primary residence.' },
+     { id: 'conv-26', category: 'Conventional Mastery', front: 'Charge-Off Rule', back: 'Always omitted.' },
+     { id: 'conv-27', category: 'Conventional Mastery', front: 'Disputed Derogatory Accounts', back: 'No specific action; based on underlying account type.' },
+     { id: 'conv-28', category: 'Conventional Mastery', front: 'First-Time Homebuyer (Def)', back: 'No home ownership in previous 3 years.' },
+     { id: 'conv-29', category: 'Conventional Mastery', front: 'Multiple Financed Properties', back: 'Allows for ownership of up to 10 properties.' },
+     { id: 'conv-30', category: 'Conventional Mastery', front: 'Tax Repayment Plan', back: '1 payment made and 0x30x12 required.' },
+     { id: 'conv-31', category: 'Conventional Mastery', front: 'Self-Employment History', back: 'Generally 2 years of tax returns.' },
+     { id: 'conv-32', category: 'Conventional Mastery', front: 'Lease Payment Inclusion', back: 'Always included in DTI.' },
+     { id: 'conv-33', category: 'Conventional Mastery', front: 'Student Loan IBR (DU)', back: 'Use the actual payment reported, even if $0.' },
+     { id: 'conv-34', category: 'Conventional Mastery', front: 'Student Loan LP (IBR/Defer)', back: 'Use higher of reported or 0.5%.' },
+     { id: 'conv-35', category: 'Conventional Mastery', front: 'Occupancy Options', back: 'Primary, Secondary, or Investment.' },
+     { id: 'conv-36', category: 'Conventional Mastery', front: 'DPA Credit Score (Min)', back: '660 FICO.' },
+     { id: 'conv-37', category: 'Conventional Mastery', front: 'Streamline Refinance?', back: 'Not available for Conventional loans.' },
+     { id: 'conv-38', category: 'Conventional Mastery', front: 'Cash-Out Refi Seasoning', back: '6 months from purchase.' },
+     { id: 'conv-39', category: 'Conventional Mastery', front: 'Short Sale Seasoning', back: '4 years (48 months).' },
+     { id: 'conv-40', category: 'Conventional Mastery', front: 'Deed in Lieu Seasoning', back: '4 years (48 months).' }
+    ];
+
+    const rawQuizData = [
+     { q: 'What is the minimum monthly entry for RE Taxes in Encompass?', a: '$100', d: ['$50', '$25', '$0'] },
+     { q: 'To switch products, where do you go in Encompass?', a: 'Apply Loan Template Set', d: ['Product & Pricing Desk', 'eFolder Document Manager', 'Loan Setup Menu'] },
+     { q: 'What interval must Taxes/Insurance be rounded to?', a: '$25', d: ['$10', '$50', '$100'] },
+     { q: 'True/False: You can use "Advanced Find" to find new leads.', a: 'False - Strict integrity rule', d: ['True - Highly encouraged', 'True - But only for FHA leads', 'True - With manager approval'] },
+     { q: 'What is the description format for an MI quote in the eFolder?', a: 'Milestone - Order # - Provider', d: ['Provider - Date - Loan #', 'Borrower Name - Provider - Rate', 'Date - Provider - Milestone'] },
+     { q: 'Where do you manually add stips if the PQ Screen is already sent?', a: 'VU+', d: ['eFolder', 'Conditions Tab', 'Milestone Setup'] },
+     { q: 'What is the default student loan payment calculation for FHA?', a: '0.5% of balance', d: ['1% of balance', '$0 if in deferment', '5% of balance'] },
+     { q: 'What column should you use in the VU+ rate sheet for a quote?', a: '45-day lock', d: ['30-day lock', '15-day lock', '60-day lock'] },
+     { q: 'True/False: You must always pull a soft credit report before running AUS.', a: 'True', d: ['False - Hard pull is required', 'False - Only for Conventional', 'False - AUS pulls it automatically'] },
+     { q: 'Where do you enter address history?', a: 'Show All/VOR button in App Summary', d: ['1003 Page 1', 'Borrower Contacts Tab', 'eFolder'] },
+     { q: 'Which system is used for Conventional MI quotes?', a: 'TQL Services', d: ['Optimal Blue', 'MGIC Direct', 'Encompass MI Desk'] },
+     { q: 'How long does it take for Encompass and CRM to sync after a denial?', a: '5-10 minutes', d: ['Instantly', '24 hours', '1-2 hours'] },
+     { q: 'What must you check if an Equifax score is between 605 and 635?', a: 'Upgrade the report', d: ['Order a Rapid Rescore', 'Deny the loan', 'Switch to FHA immediately'] },
+     { q: 'What is the standard "base" rate cushion?', a: '0.25% above Par', d: ['0.125% above Par', '0.50% above Par', 'At Par (0.00%)'] },
+     { q: 'How do you handle a "Bad Number"?', a: 'Attempt all other numbers first, then mark Bad Number', d: ['Delete the lead entirely', 'Mark "Do Not Call"', 'Text the number immediately'] },
+     { q: 'When is a lead marked "CONTACTED"?', a: 'Immediately upon speaking to a consenting adult', d: ['After pulling credit', 'After receiving an application', 'After sending a quote'] },
+     { q: 'What system tool connects to user bank accounts?', a: 'PLAID', d: ['Yodlee', 'Mint', 'Encompass Asset Sync'] },
+     { q: 'Where do you enter Household Income for USDA?', a: 'MyQueue Notes skeleton', d: ['1003 Page 2', 'Transmittal Summary', 'Income Worksheet'] },
+     { q: 'What button swaps a borrower position if the co-borrower becomes primary?', a: 'Manage Borrower', d: ['Swap Positions', 'Edit Applicants', 'Reorder 1003'] },
+     { q: 'What is a "PCB"?', a: 'Previously Closed Borrower', d: ['Pending Credit Bureau', 'Pre-Conditioned Borrower', 'Post-Closing Billing'] },
+     { q: 'What is the Encompass milestone when a contract is received?', a: 'Submission to Processing', d: ['Disclosures Sent', 'Clear to Close', 'Application Started'] },
+     { q: 'True/False: Gift funds can be used for reserves on FHA loans.', a: 'False', d: ['True - Up to 3 months', 'True - If from a blood relative', 'True - For down payment AND reserves'] },
+     { q: 'What button pulls liabilities into the file?', a: 'Order Credit -> Import Liabilities', d: ['Sync Debts', 'Refresh 1003', 'Download Credit'] },
+     { q: 'Where is the "Drive Score" selected?', a: 'Top left of the MyQ page', d: ['Bottom of the App Summary', 'Inside the eFolder', 'On the Pipeline view'] },
+     { q: 'What constitutes a "Referral"?', a: 'LO contacted directly before lead creation', d: ['Lead from Zillow', 'Lead aged over 30 days', 'Transferred from another department'] },
+     { q: 'What status does an automated message "person not accepting calls" get?', a: 'No Contact', d: ['Bad Number', 'Left Message', 'Do Not Call'] },
+     { q: 'What is the "eFolder"?', a: 'System for storing/identifying documents and quotes', d: ['The pipeline view for the LO', 'The borrower portal', 'The credit report history'] },
+     { q: 'What must be set to "No Stats" during a borrower import?', a: 'The borrower import window checkbox', d: ['The pipeline view', 'The credit report', 'The Loan Estimate'] },
+     { q: 'What identifies the lender on an insurance policy?', a: 'Mortgagee Clause', d: ['Loss Payee', 'Lender ID Number', 'Servicing Agreement'] },
+     { q: 'Where do you verify the MI Master Policy Number?', a: 'Branch Information section in TQL', d: ['Product & Pricing screen', 'AUS Findings', 'eFolder Quote'] },
+     { q: 'What is the max number of rings before hanging up a lead?', a: '5 rings', d: ['3 rings', '8 rings', '10 rings'] },
+     { q: 'True/False: You should mark "Left Message" after trying only one of three available numbers.', a: 'False - try all first', d: ['True - Saves time', 'True - Unless it is a mobile number', 'True - If it is the primary number'] },
+     { q: 'What is the "URLA"?', a: 'Uniform Residential Loan Application / 1003', d: ['Underwriting Review & Loan Approval', 'Universal Rate Lock Agreement', 'Unsecured Revolving Line of Allocation'] },
+     { q: 'Where are "Revision Notes" entered for incorrect doc uploads?', a: 'VU+ Stip Revision box', d: ['eFolder Comments', '1003 Page 4', 'Processing Notes'] },
+     { q: 'What is the automated system for USDA?', a: 'GUS', d: ['DU', 'LP', 'FHA Total Scorecard'] },
+     { q: 'True/False: Manual Underwrites are permitted on Conventional loans.', a: 'False', d: ['True - With 20% down', 'True - If FICO > 720', 'True - For first-time buyers only'] },
+     { q: 'What is the max DTI for FHA manual UW without comp factors?', a: '31/43', d: ['29/41', '40/50', '43/55'] },
+     { q: 'How do you find a specific call recording?', a: 'Calabrio filter by Phone Number +1 format', d: ['Search Encompass Notes', 'Encompass eFolder', 'Look in the CRM history'] },
+     { q: 'Where is the "Hot Transfer" button located?', a: 'ACD speed dial', d: ['Lead profile page', 'MyQueue', 'Softphone app settings'] },
+     { q: 'What must you use to document a rent-free borrower for USDA manual UW?', a: '3 tradelines', d: ['Letter of Explanation (LOE)', 'VOR from landlord', 'Cancelled rent checks'] }
+    ];
+
+    const Icons = {
+     Book: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>,
+     ChevronLeft: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>,
+     ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>,
+     Shuffle: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.8.8 3.6 2.1l1.5 2.5"/><path d="M11 16.6l1.2 1.8c.8 1.3 2.1 2.1 3.6 2.1H22"/><path d="m18 14 4 4-4 4"/></svg>,
+     Rotate: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>,
+     Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+     X: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+     Refresh: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>,
+     Trophy: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
+     Target: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+     Speech: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+     Laptop: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></svg>,
+     ArrowRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>,
+     CheckCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>,
+     Alert: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>,
+     Grid: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>,
+     ChevronUp: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>,
+     ChevronDown: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>,
+    };
+
+    // ==========================================
+    // 2. FLASHCARDS COMPONENT
+    // ==========================================
+
+    function FlashcardsApp() {
+     const [activeCategory, setActiveCategory] = useState('All');
+     const [filteredCards, setFilteredCards] = useState(flashcardsData);
+     const [currentIndex, setCurrentIndex] = useState(0);
+     const [isFlipped, setIsFlipped] = useState(false);
+     const [animating, setAnimating] = useState(false);
+
+     const categories = ['All', 'FHA Specialist', 'USDA Rural Expert', 'Conventional Mastery'];
+
+     useEffect(() => {
+       setIsFlipped(false);
+       setCurrentIndex(0);
+       if (activeCategory === 'All') {
+         setFilteredCards(flashcardsData);
+       } else {
+         setFilteredCards(flashcardsData.filter(c => c.category === activeCategory));
+       }
+     }, [activeCategory]);
+
+     const handleNext = useCallback(() => {
+       if (animating) return;
+       setIsFlipped(false);
+       setAnimating(true);
+       setTimeout(() => {
+         setCurrentIndex((prev) => (prev + 1) % filteredCards.length);
+         setAnimating(false);
+       }, 200);
+     }, [filteredCards.length, animating]);
+
+     const handlePrev = useCallback(() => {
+       if (animating) return;
+       setIsFlipped(false);
+       setAnimating(true);
+       setTimeout(() => {
+         setCurrentIndex((prev) => (prev - 1 + filteredCards.length) % filteredCards.length);
+         setAnimating(false);
+       }, 200);
+     }, [filteredCards.length, animating]);
+
+     const toggleFlip = () => setIsFlipped(!isFlipped);
+
+     const handleShuffle = () => {
+       setIsFlipped(false);
+       setAnimating(true);
+       setTimeout(() => {
+         const shuffled = [...filteredCards].sort(() => Math.random() - 0.5);
+         setFilteredCards(shuffled);
+         setCurrentIndex(0);
+         setAnimating(false);
+       }, 300);
+     };
+
+     useEffect(() => {
+       const handleKeyDown = (e) => {
+         if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'ArrowDown') {
+           e.preventDefault();
+           toggleFlip();
+         } else if (e.code === 'ArrowRight') {
+           handleNext();
+         } else if (e.code === 'ArrowLeft') {
+           handlePrev();
+         }
+       };
+       window.addEventListener('keydown', handleKeyDown);
+       return () => window.removeEventListener('keydown', handleKeyDown);
+     }, [handleNext, handlePrev, toggleFlip]);
+
+     const currentCard = filteredCards[currentIndex];
+
+     const getCategoryColor = (category) => {
+       switch (category) {
+         case 'FHA Specialist': return 'bg-blue-600';
+         case 'USDA Rural Expert': return 'bg-green-600';
+         case 'Conventional Mastery': return 'bg-purple-600';
+         default: return 'bg-gray-600';
+       }
+     };
+
+     return (
+       <div className="flex flex-col items-center w-full animate-in fade-in duration-500">
+         {/* Controls / Filter */}
+         <div className="w-full max-w-3xl mb-8 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+           <div className="flex flex-wrap gap-2 justify-center">
+             {categories.map((cat) => (
+               <button
+                 key={cat}
+                 onClick={() => setActiveCategory(cat)}
+                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                   activeCategory === cat
+                     ? 'bg-indigo-600 text-white shadow-md'
+                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                 }`}
+               >
+                 {cat}
+               </button>
+             ))}
+           </div>
+          
+           <button
+             onClick={handleShuffle}
+             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+             title="Shuffle Cards"
+           >
+             <Icons.Shuffle /> Shuffle
+           </button>
+         </div>
+
+         {/* Flashcard Area */}
+         <div className="w-full max-w-2xl relative mb-8">
+           <div className="flex justify-between text-xs font-semibold text-slate-400 mb-3 px-2 tracking-wider uppercase">
+             <span>Card {currentIndex + 1} of {filteredCards.length}</span>
+             <span>{currentCard?.category}</span>
+           </div>
+
+           <div
+             className="relative w-full h-[350px] sm:h-[400px] cursor-pointer group"
+             style={{ perspective: '1000px' }}
+             onClick={toggleFlip}
+           >
+             <div
+               className={`w-full h-full relative transition-transform duration-500 shadow-xl rounded-3xl ${animating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
+               style={{
+                 transformStyle: 'preserve-3d',
+                 transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+               }}
+             >
+               {/* Front */}
+               <div
+                 className="absolute w-full h-full backface-hidden rounded-3xl border-2 border-slate-100 bg-white flex flex-col overflow-hidden"
+                 style={{ backfaceVisibility: 'hidden' }}
+               >
+                 <div className={`h-2 w-full ${getCategoryColor(currentCard?.category)}`} />
+                 <div className="flex-1 flex flex-col justify-center items-center p-8 text-center">
+                   <span className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Question</span>
+                   <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 leading-snug">
+                     {currentCard?.front}
+                   </h2>
+                 </div>
+                 <div className="p-4 text-center text-slate-400 text-sm border-t border-slate-50 flex justify-center items-center gap-2">
+                   <Icons.Rotate /> Click to reveal answer
+                 </div>
+               </div>
+
+               {/* Back */}
+               <div
+                 className="absolute w-full h-full backface-hidden rounded-3xl border-2 border-indigo-100 bg-indigo-50 flex flex-col overflow-hidden"
+                 style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+               >
+                 <div className={`h-2 w-full ${getCategoryColor(currentCard?.category)}`} />
+                 <div className="flex-1 flex flex-col justify-center items-center p-8 text-center">
+                   <span className="text-sm font-bold text-indigo-400 uppercase tracking-widest mb-4">Answer</span>
+                   <p className="text-xl sm:text-2xl font-medium text-indigo-900 leading-relaxed overflow-y-auto">
+                     {currentCard?.back}
+                   </p>
+                 </div>
+                 <div className="p-4 text-center text-indigo-400 text-sm border-t border-indigo-100 flex justify-center items-center gap-2">
+                   <Icons.Rotate /> Click to see question
+                 </div>
+               </div>
+             </div>
+           </div>
+
+           {/* Navigation Buttons */}
+           <div className="flex justify-between items-center mt-8 gap-4">
+             <button
+               onClick={handlePrev}
+               className="flex-1 flex justify-center items-center gap-2 py-4 rounded-xl bg-white text-slate-700 font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95"
+             >
+               <Icons.ChevronLeft /> Previous
+             </button>
+             <button
+               onClick={handleNext}
+               className="flex-1 flex justify-center items-center gap-2 py-4 rounded-xl bg-indigo-600 text-white font-semibold shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all active:scale-95"
+             >
+               Next <span className="rotate-180"><Icons.ChevronLeft /></span>
+             </button>
+           </div>
+         </div>
+       </div>
+     );
+    }
+
+    // ==========================================
+    // 3. QUIZ COMPONENT
+    // ==========================================
+
+    const shuffleArray = (array) => {
+     const newArr = [...array];
+     for (let i = newArr.length - 1; i > 0; i--) {
+       const j = Math.floor(Math.random() * (i + 1));
+       [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+     }
+     return newArr;
+    };
+
+    function QuizApp() {
+     const [questions, setQuestions] = useState([]);
+     const [currentIndex, setCurrentIndex] = useState(0);
+     const [selectedAnswer, setSelectedAnswer] = useState(null);
+     const [score, setScore] = useState(0);
+     const [isFinished, setIsFinished] = useState(false);
+
+     const initializeQuiz = useCallback(() => {
+       const processed = rawQuizData.map(item => {
+         const allOptions = [item.a, ...item.d];
+         return {
+           questionText: item.q,
+           correctAnswer: item.a,
+           options: shuffleArray(allOptions)
+         };
+       });
+       setQuestions(shuffleArray(processed));
+       setCurrentIndex(0);
+       setSelectedAnswer(null);
+       setScore(0);
+       setIsFinished(false);
+     }, []);
+
+     useEffect(() => { initializeQuiz(); }, [initializeQuiz]);
+
+     const handleSelect = (option) => {
+       if (selectedAnswer !== null) return;
+       setSelectedAnswer(option);
+       if (option === questions[currentIndex].correctAnswer) setScore(prev => prev + 1);
+     };
+
+     const handleNext = () => {
+       if (currentIndex < questions.length - 1) {
+         setCurrentIndex(prev => prev + 1);
+         setSelectedAnswer(null);
+       } else {
+         setIsFinished(true);
+       }
+     };
+
+     useEffect(() => {
+       const handleKeyDown = (e) => {
+         if (isFinished || questions.length === 0) return;
+         const currentQ = questions[currentIndex];
+        
+         if (selectedAnswer === null) {
+           if (e.key === '1' && currentQ.options[0]) handleSelect(currentQ.options[0]);
+           if (e.key === '2' && currentQ.options[1]) handleSelect(currentQ.options[1]);
+           if (e.key === '3' && currentQ.options[2]) handleSelect(currentQ.options[2]);
+           if (e.key === '4' && currentQ.options[3]) handleSelect(currentQ.options[3]);
+         }
+         if (selectedAnswer !== null && (e.code === 'Enter' || e.code === 'Space')) {
+           e.preventDefault();
+           handleNext();
+         }
+       };
+       window.addEventListener('keydown', handleKeyDown);
+       return () => window.removeEventListener('keydown', handleKeyDown);
+     }, [currentIndex, selectedAnswer, isFinished, questions]);
+
+     if (questions.length === 0) return null;
+
+     const currentQuestion = questions[currentIndex];
+     const progressPercent = ((currentIndex) / questions.length) * 100;
+
+     const getOptionStyle = (option) => {
+       const isCorrect = option === currentQuestion.correctAnswer;
+       const isSelected = option === selectedAnswer;
+
+       if (selectedAnswer === null) return "bg-white border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 shadow-sm";
+       if (isSelected && isCorrect) return "bg-emerald-50 border-emerald-500 text-emerald-900 shadow-md ring-1 ring-emerald-500";
+       if (isSelected && !isCorrect) return "bg-rose-50 border-rose-500 text-rose-900 shadow-md ring-1 ring-rose-500";
+       if (!isSelected && isCorrect) return "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm";
+       return "bg-slate-50 border-slate-200 text-slate-400 opacity-60 cursor-not-allowed";
+     };
+
+     const getOptionIcon = (option) => {
+       if (selectedAnswer === null) return null;
+       if (option === currentQuestion.correctAnswer) return <div className="text-emerald-500 bg-emerald-100 p-1 rounded-full"><Icons.Check /></div>;
+       if (option === selectedAnswer) return <div className="text-rose-500 bg-rose-100 p-1 rounded-full"><Icons.X /></div>;
+       return null;
+     };
+
+     return (
+       <div className="flex flex-col items-center w-full max-w-3xl animate-in fade-in duration-500">
+         {!isFinished ? (
+           <div className="w-full">
+             <div className="flex justify-between items-end mb-3 px-2">
+               <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+                 Question {currentIndex + 1} of {questions.length}
+               </span>
+               <div className="text-right">
+                 <span className="text-xs text-slate-400 uppercase font-semibold mr-2">Score</span>
+                 <span className="text-lg font-extrabold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-lg">{score}</span>
+               </div>
+             </div>
+
+             <div className="w-full h-2 bg-slate-200 rounded-full mb-6 overflow-hidden">
+               <div className="h-full bg-indigo-500 transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }}></div>
+             </div>
+
+             <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden mb-8">
+               <div className="p-8 sm:p-10 border-b border-slate-100 bg-slate-50/50">
+                 <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 leading-snug">{currentQuestion.questionText}</h2>
+               </div>
+               <div className="p-6 sm:p-8 flex flex-col gap-3">
+                 {currentQuestion.options.map((option, idx) => (
+                   <button
+                     key={idx}
+                     onClick={() => handleSelect(option)}
+                     disabled={selectedAnswer !== null}
+                     className={`flex items-center justify-between p-4 sm:p-5 rounded-2xl border-2 text-left text-lg font-medium transition-all duration-200 ${getOptionStyle(option)}`}
+                   >
+                     <div className="flex items-center gap-4">
+                       <span className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold transition-colors ${selectedAnswer === null ? 'bg-slate-100 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-600' : 'bg-transparent text-opacity-0'}`}>
+                         {selectedAnswer === null ? idx + 1 : ''}
+                       </span>
+                       <span>{option}</span>
+                     </div>
+                     {getOptionIcon(option)}
+                   </button>
+                 ))}
+               </div>
+               <div className={`px-6 sm:px-8 pb-8 flex justify-end transition-opacity duration-300 ${selectedAnswer ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                 <button
+                   onClick={handleNext}
+                   className="flex items-center gap-2 px-8 py-4 rounded-xl bg-indigo-600 text-white font-bold text-lg shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all active:scale-95"
+                 >
+                   {currentIndex === questions.length - 1 ? 'Finish Quiz' : 'Next Question'} <span className="rotate-180"><Icons.ChevronLeft /></span>
+                 </button>
+               </div>
+             </div>
+           </div>
+         ) : (
+           <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden p-10 text-center flex flex-col items-center w-full">
+             <div className="w-24 h-24 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-6 shadow-inner">
+               <Icons.Trophy />
+             </div>
+             <h2 className="text-3xl font-extrabold text-slate-900 mb-2">Quiz Complete!</h2>
+             <p className="text-slate-500 mb-8">Let's see how you did on the NB Origination Process Quiz.</p>
+            
+             <div className="bg-slate-50 border border-slate-100 rounded-2xl p-8 w-full max-w-md mb-8">
+               <div className="text-6xl font-black text-indigo-600 mb-2">
+                 {Math.round((score / questions.length) * 100)}%
+               </div>
+               <div className="text-slate-600 font-medium text-lg">
+                 You scored <strong className="text-slate-900">{score}</strong> out of <strong className="text-slate-900">{questions.length}</strong>
+               </div>
+             </div>
+
+             <button
+               onClick={initializeQuiz}
+               className="flex items-center gap-2 px-8 py-4 rounded-xl bg-slate-900 text-white font-bold shadow-md hover:bg-slate-800 transition-all active:scale-95"
+             >
+               <Icons.Refresh /> Take Quiz Again
+             </button>
+           </div>
+         )}
+       </div>
+     );
+    }
+
+    // ==========================================
+    // 4. BATTLE CARD COMPONENT
+    // ==========================================
+
+    const GoalBadge = ({ text }) => (
+     <div className="flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-3 rounded-xl font-bold text-sm tracking-wide shadow-sm mb-6 border border-amber-200">
+       <Icons.Target /> <span>GOAL: {text}</span>
+     </div>
+    );
+
+    const ScriptBox = ({ title, text, list, defaultExpanded = true }) => {
+     const [expanded, setExpanded] = useState(defaultExpanded);
+      return (
+       <div className="relative bg-blue-50 border-l-4 border-blue-500 rounded-r-xl p-5 mb-4 shadow-sm group hover:shadow-md transition-all">
+         <div
+           className="flex justify-between items-center cursor-pointer select-none"
+           onClick={() => setExpanded(!expanded)}
+         >
+           <h4 className="text-xs font-black uppercase text-blue-600 tracking-wider flex items-center gap-2">
+             <Icons.Speech /> Script: {title}
+           </h4>
+           <div className="text-blue-400 group-hover:text-blue-600 transition-colors">
+             {expanded ? <Icons.ChevronUp /> : <Icons.ChevronDown />}
+           </div>
+         </div>
+        
+         <div className={`transition-all duration-300 overflow-hidden ${expanded ? 'max-h-[1000px] opacity-100 mt-3' : 'max-h-0 opacity-0'}`}>
+           {text && <p className="text-blue-900 text-lg font-serif leading-relaxed italic">"{text}"</p>}
+           {list && (
+             <ul className="mt-3 space-y-2">
+               {list.map((item, i) => (
+                 <li key={i} className="flex items-start gap-2 text-blue-900 text-[15px] font-serif italic">
+                   <span className="text-blue-400 mt-1"><Icons.CheckCircle /></span><span>{item}</span>
+                 </li>
+               ))}
+             </ul>
+           )}
+         </div>
+       </div>
+     );
+    };
+
+    const ActionBox = ({ title, text, bulletPoints }) => (
+     <div className="relative bg-slate-800 border-l-4 border-emerald-500 rounded-r-xl p-5 mb-4 shadow-sm">
+       <div className="absolute top-0 right-0 p-3 text-slate-600"><Icons.Laptop /></div>
+       <h4 className="text-xs font-black uppercase text-emerald-400 tracking-wider mb-2 flex items-center gap-2">💻 System Action: {title}</h4>
+       {text && <p className="text-slate-200 text-base font-mono">{text}</p>}
+       {bulletPoints && (
+         <ul className="mt-3 space-y-2">
+           {bulletPoints.map((item, i) => (
+             <li key={i} className="flex items-start gap-2 text-slate-300 text-sm font-mono">
+               <span className="text-emerald-500 mt-0.5"><Icons.ArrowRight /></span><span>{item}</span>
+             </li>
+           ))}
+         </ul>
+       )}
+     </div>
+    );
+
+    const TransitionBox = ({ text }) => (
+     <div className="flex items-center justify-center gap-3 bg-slate-100 text-slate-500 py-3 px-4 rounded-xl mb-4 border border-slate-200 border-dashed text-sm font-bold uppercase tracking-wider">
+       <Icons.ArrowRight /> {text} <Icons.ArrowRight />
+     </div>
+    );
+
+    function BattleCardApp() {
+     const [activeTab, setActiveTab] = useState(0);
+     const [loanType, setLoanType] = useState('Undecided');
+      const stages = [
+       { id: 'stage1', title: '1. Discovery' },
+       { id: 'stage2', title: '2. The App & Setup' },
+       { id: 'stage3', title: '3. PQ Out & Handoff' },
+     ];
+      const loanTypes = ['Undecided', 'FHA', 'USDA', 'Conventional'];
+
+     return (
+       <div className="flex flex-col items-center w-full max-w-4xl animate-in fade-in duration-500">
+        
+         {/* Context Router Selector */}
+         <div className="w-full mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+           <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+             <Icons.Target /> Select Loan Type
+           </div>
+           <div className="flex flex-wrap gap-2">
+             {loanTypes.map((type) => (
+               <button
+                 key={type}
+                 onClick={() => setLoanType(type)}
+                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                   loanType === type
+                     ? 'bg-emerald-100 text-emerald-800 border-2 border-emerald-500 shadow-sm'
+                     : 'bg-slate-50 text-slate-500 border-2 border-transparent hover:bg-slate-100 hover:text-slate-700'
+                 }`}
+               >
+                 {type}
+               </button>
+             ))}
+           </div>
+         </div>
+
+         <div className="w-full bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex mb-6 overflow-x-auto">
+           {stages.map((stage, idx) => (
+             <button
+               key={stage.id}
+               onClick={() => setActiveTab(idx)}
+               className={`flex-1 min-w-[120px] py-3 px-4 rounded-xl font-bold text-sm sm:text-base transition-all whitespace-nowrap ${
+                 activeTab === idx ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+               }`}
+             >
+               {stage.title}
+             </button>
+           ))}
+         </div>
+
+         <div className="w-full bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden mb-8">
+           <div className="p-6 sm:p-10">
+             {activeTab === 0 && (
+               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                 <GoalBadge text="Establish rapport and find the borrower's 'WHY'." />
+                 <ActionBox title="Initiate Lead" text="Use GET LEAD in MyQueue to pull your next prospect." />
+                 <ScriptBox title="The Intro" text="Hey there! This is ____ with Neighbors Bank, I am calling for ____? Awesome, how's your day going so far?" defaultExpanded={false} />
+                 <ActionBox title="Log Contact" text="If contact is made with a consenting adult, mark CONTACTED immediately in CRM." />
+             <ScriptBox title="The Neighborhood Hook" text="Well hey ____, I DON'T want to take up much of your time today, I will be really quick for you, but - I had some information on my end, it looks like you were looking into some options concerning possibly purchasing a home over in ____ is that correct?" defaultExpanded={false} />
+                 <ScriptBox title="Rapport Building & Roadmap" text="Perfect, well you came to the right place! Just so you know, nothing we are doing today obligates you to a loan or anything else with us - My job here is really just to answer any questions you have, and help you figure out what your options are and how we can help." defaultExpanded={false} />
+                 <ScriptBox title="Finding the 'Why'" text="Now just so I have an idea, did you have a specific property in mind yet, or were you just looking to see what your options may be and what this may look like for you? (Purchase Price)... Nice! (Find the Why) Are you relocating for your job? Is this your first home purchase? Upgrading the home for a growing family?" defaultExpanded={false}/>
+                 <TransitionBox text="Push the lead to Encompass to begin the application" />
+               </div>
+             )}
+
+             {activeTab === 1 && (
+               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                 <GoalBadge text="Gather precise data, pull credit, and verify legal declarations." />
+                 <ScriptBox title="Verification of Income & Assets" text="Like I mentioned before, we will be super quick and basically just play a quick game of 20 Questions and just kind of go over things like Income, assets, and liabilities - and with that, it should give us a better idea of what some next steps would look like for you! So let's just start with some really basic information about yourself..." defaultExpanded={false}/>
+                 <ActionBox title="1003 Data Entry" bulletPoints={["Enter Full Name", "Enter 2-year Address History (Use Show All/VOR button)", "Enter 2-year Job History"]} />
+                 <ScriptBox title="Credit Permission" text="The next step is just verifying your debts and liabilities and also just verifying to see where those scores are coming in- do you have any idea of where you are sitting right now? We’ll look at 'Mortgage Scores' today—it’s a soft pull, meaning zero impact on your scores. To get that report waiting for us, I just need your SSN and Date of Birth." defaultExpanded={false}/>
+                
+                 {/* Contextual System Actions based on Loan Type */}
+                 <ActionBox
+                   title={`System Execution: Credit & Setup ${loanType !== 'Undecided' ? `(${loanType})` : ''}`}
+                   bulletPoints={[
+                     "Order Credit: Pull a Soft Credit Report",
+                     "Access the Liability Analysis form (Do NOT enter debts on main App Summary)",
+                     "Calculate Repayment Income",
+                     ...(loanType === 'USDA' || loanType === 'Undecided' ? ["USDA ONLY: Enter Household Income in MyQueue notes ONLY. (Includes all adult residents)."] : []),
+                     ...(loanType === 'FHA' ? ["FHA ONLY: Default student loan payment calculation is 0.5% of balance."] : []),
+                     ...(loanType === 'Conventional' ? ["CONV ONLY: Check LP (0.5%) or DU (1%) rules for student loans if payment is $0."] : [])
+                   ]}
+                 />
+                
+                 <ScriptBox title="Required Legal Declarations" text="While the report pulls, I have a few quick Yes/No questions:" list={["Will you occupy this home as your primary residence?", "Do you currently own any other properties (second home or rental)?", "Have you owned a home in the last 3 years?", "Are you borrowing any money for closing costs?", "Are you applying for a mortgage on any other properties?", "Are you/will you be applying for new credit (like a credit card)?", "Are you a co-signer on any other loans?", "Are there any judgments I should know about?", "Are you delinquent on any Federal Debt?", "Are you currently involved in any lawsuits?", "Any bankruptcies or foreclosures in the last 7 years?", "Have you given title in lieu of foreclosure?"]} defaultExpanded={false} />
+                 <ScriptBox title="Government Monitoring Info (GMI)" text="These next few questions you are not required to answer, but I am required by law to ask: What is your Ethnicity? Race? Sex?" defaultExpanded={false} />
+                
+                 <div className="my-8 border-t border-slate-200"></div>
+                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><Icons.Alert /> Post-Call / Off-Phone Calculations</h3>
+                
+                 <ActionBox
+                   title={`System Order: Fees & Pricing ${loanType !== 'Undecided' ? `(${loanType})` : ''}`}
+                   bulletPoints={[
+                     "Fee Lookup: Calculate taxes/insurance based on county data. Round UP to nearest $25 interval (min $100).",
+                     "VU+ Price Estimator: Identify the 45-day lock rate closest to Par. Add 0.25% cushion.",
+                     ...(loanType === 'FHA' ? ["MI Calculation: Use 'Get MI' tool in Encompass for FHA."] : []),
+                     ...(loanType === 'Conventional' ? ["MI Calculation: Use 'TQL Services' for Conventional MI quote."] : []),
+                     ...(loanType === 'USDA' ? ["USDA Fee: Account for 1% Upfront Guarantee Fee and 0.35% Annual Fee."] : []),
+                     ...(loanType === 'Undecided' ? ["MI Calculation: Use 'Get MI' for FHA. Use 'TQL Services' for Conventional."] : [])
+                   ]}
+                 />
+                
+                 <ScriptBox title="The Professional Exit" text="Alright, the scores look solid! I had Equifax coming in at [Score]. I need to crunch these numbers to see your options. Let's set a call back for [Time] to go over the results." defaultExpanded={false}/>
+               </div>
+             )}
+
+             {activeTab === 2 && (
+               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                 <GoalBadge text="Commit the borrower to homework (portal upload) by 8 PM & transition to Realty." />
+             <ScriptBox title="The Intro" text="Hi ____ this is ____ with Neighbors Bank giving you a call back to discuss your home loan options, how are you? Great!" defaultExpanded={false} />
+                 <ScriptBox title="The Good News Hook" text="Hi [Name], I've got your figures worked up and we are looking good! You qualify for a loan—the next step is finding exactly what your maximum 'CAP' is." defaultExpanded={false} />
+                 <ScriptBox title="The 'Secure Filing Cabinet'" text="You’ll get an email link to your 'MyAccount' portal. Think of this as your secure online filing cabinet. You'll see a 'To-Do List' where you can upload documents." defaultExpanded={false} />
+                 <ScriptBox title="The Essential Docs" text="Whatever you see on that list, just upload it. The most important ones I need right now are your Photo ID, 2 recent pay stubs, and last 2 years of W2s." defaultExpanded={false} />
+                 <ScriptBox title="Establishing Urgency" text="It only takes about 10 minutes. Can I give you some homework to get those uploaded by, say, 8 PM tonight after dinner? Great! Once I get those documents, I will actually get a notification that you uploaded something, so I will be on the lookout for a notification and check on everything tomorrow!" defaultExpanded={false} />
+                 <ActionBox title="Send Pre-Qualification Checklist" text="Select required items in the PQ Checklist within Encompass and send to the borrower." />
+                 <ScriptBox title="The Alliance Transfer (ARN)" text="Last thing: Are you working with an agent? I want to get you connected with my teammates on the Realty team. They have a network of specialized local agents at no cost to you. I'll bring them on the line now." defaultExpanded={false} />
+                 <ActionBox title="Final Handoff Execution" bulletPoints={["Hot Transfer: Connect the borrower to a Realty Coordinator in Alliance Realty Network (ARN) via ACD speed dial.", "Add PQO Notes skeleton to MyQueue.", "Hit the 'File Handoff' button."]} />
+                 <TransitionBox text="Process Complete" />
+               </div>
+             )}
+           </div>
+         </div>
+       </div>
+     );
+    }
+
+    // ==========================================
+    // 5. MAIN PORTAL (ROUTER / LAYOUT)
+    // ==========================================
+
+    function App() {
+     const [currentView, setCurrentView] = useState('home');
+
+     const navItems = [
+       { id: 'flashcards', label: 'Flashcards', icon: <Icons.Rotate />, color: 'text-blue-600', bg: 'bg-blue-100' },
+       { id: 'quiz', label: 'Process Quiz', icon: <Icons.Trophy />, color: 'text-indigo-600', bg: 'bg-indigo-100' },
+       { id: 'battlecard', label: 'Battle Card', icon: <Icons.Target />, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+     ];
+
+     const renderView = () => {
+       switch (currentView) {
+         case 'flashcards': return <FlashcardsApp />;
+         case 'quiz': return <QuizApp />;
+         case 'battlecard': return <BattleCardApp />;
+         default: return (
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl animate-in fade-in duration-500">
+             <button onClick={() => setCurrentView('flashcards')} className="flex flex-col items-center p-8 bg-white rounded-3xl shadow-md border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all group text-center">
+               <div className="w-20 h-20 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+               </div>
+               <h2 className="text-2xl font-bold text-slate-800 mb-2">Mortgage Flashcards</h2>
+               <p className="text-slate-500">Master FHA, USDA, and Conventional guidelines with interactive study cards.</p>
+             </button>
+
+             <button onClick={() => setCurrentView('quiz')} className="flex flex-col items-center p-8 bg-white rounded-3xl shadow-md border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all group text-center">
+               <div className="w-20 h-20 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                 <Icons.Trophy />
+               </div>
+               <h2 className="text-2xl font-bold text-slate-800 mb-2">Process Quiz</h2>
+               <p className="text-slate-500">Test your knowledge on Encompass navigation, tools, and origination flows.</p>
+             </button>
+
+             <button onClick={() => setCurrentView('battlecard')} className="flex flex-col items-center p-8 bg-white rounded-3xl shadow-md border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all group text-center">
+               <div className="w-20 h-20 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                 <Icons.Target />
+               </div>
+               <h2 className="text-2xl font-bold text-slate-800 mb-2">Live Battle Card</h2>
+               <p className="text-slate-500">Quick-reference dashboard integrating call scripts and essential system actions.</p>
+             </button>
+           </div>
+         );
+       }
+     };
+
+     return (
+       <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col">
+         {/* Top Navigation Bar */}
+         <nav className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+             <div className="flex justify-between h-16">
+               <div className="flex">
+                 <button
+                   onClick={() => setCurrentView('home')}
+                   className="flex items-center gap-2 flex-shrink-0 font-extrabold text-xl tracking-tight text-slate-900 hover:text-indigo-600 transition-colors"
+                 >
+                   <div className="p-1.5 bg-indigo-600 text-white rounded-lg"><Icons.Grid /></div>
+                   NB Training Hub
+                 </button>
+               </div>
+               <div className="hidden sm:flex sm:space-x-2 sm:items-center">
+                 {navItems.map(item => (
+                   <button
+                     key={item.id}
+                     onClick={() => setCurrentView(item.id)}
+                     className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${
+                       currentView === item.id
+                         ? `${item.bg} ${item.color}`
+                         : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                     }`}
+                   >
+                     <span className="w-4 h-4">{item.icon}</span> {item.label}
+                   </button>
+                 ))}
+               </div>
+             </div>
+           </div>
+         </nav>
+
+         {/* Main Content Area */}
+         <main className="flex-1 w-full max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+           {/* Dynamic Header based on View */}
+           {currentView !== 'home' && (
+             <div className="w-full text-center mb-8 animate-in slide-in-from-top-2">
+               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                 {currentView === 'flashcards' && 'Mortgage Flashcards'}
+                 {currentView === 'quiz' && 'NB Origination Process Quiz'}
+                 {currentView === 'battlecard' && 'Origination Battle Card'}
+               </h1>
+               <p className="text-slate-500 mt-2 font-medium">
+                 {currentView === 'flashcards' && 'Master FHA, USDA, and Conventional guidelines.'}
+                 {currentView === 'quiz' && 'Test your knowledge of the platform and processes.'}
+                 {currentView === 'battlecard' && 'Process Flow & Script Integration Dashboard.'}
+               </p>
+             </div>
+           )}
+
+           {/* View Header for Home */}
+           {currentView === 'home' && (
+             <div className="text-center max-w-2xl mb-12 mt-4 animate-in slide-in-from-bottom-4">
+               <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
+                 Origination Mastery Portal
+               </h1>
+               <p className="text-lg text-slate-500 leading-relaxed">
+                 Welcome to the centralized training hub. Select a tool below to practice guidelines, test your system knowledge, or navigate live borrower calls.
+               </p>
+             </div>
+           )}
+
+           {/* Rendered Tool */}
+           {renderView()}
+         </main>
+       </div>
+     );
+    }
+
+    // Standard React 18 mount
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
